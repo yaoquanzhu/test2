@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yc.dao.mapper.HouseMapper">
+		<!-- 添加房屋信息 -->
+		<select id="saveHouse" parameterType="House">
+				insert into house(user_id,type_id,title,DESCRIPTION,price,PUBDATE,floorage,contact,street_id)
+				values(#{user.id},#{type.id},#{title},#{description},#{price},
+				now(),#{floorage},#{contact},#{street.id})
+		</select>
+		
+		<!-- 更新房屋信息 -->
+		<update id="updateHouse" parameterType="House">
+				update house set user_id=#{user.id},type_id=#{type.id},title=#{title},description=#{description},
+				price=#{price},
+				pubDate=now(),floorage=#{floorage},contact=#{contact},
+				street_id=#{street.id}
+				where id=#{id}
+		</update>
+		
+		<!-- 各种查询条件的拼接 -->
+		<sql id="conditionSql">
+				from house
+				<where>
+						 <if test="title!=null and title!=''">
+								title like '%${title}%'
+						</if> 
+						
+						<if test="minPrice!=null and maxPrice!=null">
+								and (price between #{minPrice} and #{maxPrice})
+						</if>
+						
+						<if test="minfloorage!=null and maxfloorage!=null">
+								and (floorage between #{minfloorage} and #{maxfloorage})
+						</if>
+						<!-- <if test="typeId!=null and typeId!='' ">
+								and type_id=#{typeId}
+						</if> -->
+						
+						<!-- <if test="streetId!=null and streetId!=''">
+								and STREET_ID=#{streetId}
+						</if> -->
+						
+						<if test="id!=null and id!=''">
+								and id=#{id}
+						</if>
+				</where>
+		</sql>
+		
+		<!-- 排序条件的拼接 -->
+		<sql id="orderSql">
+				<if test="orderby!=null and  orderby!=''">
+						order by ${orderby}
+						<if test ="orderway!=null and orderway!=''">
+								${orderway}
+						</if>
+				</if>
+		</sql>
+		
+		<!-- 分页条件的拼接 -->
+		<sql id="pageSql">
+				<if test="start!=null">
+						limit #{start},#{pagesize}
+				</if>
+		</sql>
+		
+		<!-- 带查询条件，分页条件，排序条件的查询   -->
+		<select id="findHouseCondition" parameterType="map" resultMap="HouseMap">
+				select id,user_id,type_id,title,description,price,pubDate,floorage,contact,street_id 
+				          <include refid="conditionSql"/>
+				          <include refid="orderSql"/>
+								  <include refid="pageSql"/> 
+		</select>
+	  <resultMap type="House" id="HouseMap">
+				<id property="id" column="id" />
+				<result property="title" column="title" />
+				<result property="description" column="description" />
+				<result property="price" column="price" />
+				<result property="pubDate" column="pubDate" />
+				<result property="floorage" column="floorage" />
+				<result property="contact" column="contact" />  
+				<association property="user" javaType="User">
+					<id property="id" column="user_id" />
+					
+				</association> 
+				<association property="street" javaType="Street">
+					<id property="id" column="street_id" />
+				</association> 
+				<association property="type" javaType="HouseType">
+					<id property="id" column="type_id" />
+				</association> 
+	   </resultMap>
+		<!-- 带查询条件统计查询 -->
+	 	<select id="findHouseConditionCount" parameterType="map" resultType="int">
+				select count(*) <include refid="conditionSql"/>
+		</select> 
+		
+		<!-- 根据id删除单条信息 -->
+		<delete id="delSingleHouse">
+				delete from house where id=#{id}
+		</delete>
+		
+		<!-- 根据id删除多条信息 -->
+		<delete id="delMutilHouse" parameterType="House">
+				delete from house where id in 
+				<foreach collection="list" open="(" close=")" separator="," item="house">
+						#{teg.id}
+				</foreach>
+		</delete>
+
+
+
+
+
+
+
+
+
+
+
+</mapper>
